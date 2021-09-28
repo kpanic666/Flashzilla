@@ -10,10 +10,13 @@ import SwiftUI
 struct ContentView: View {
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     
+    static let timerValue = 5
+    
     @State private var cards = [Card]()
-    @State private var timeRemaining = 100
+    @State private var timeRemaining = timerValue
     @State private var isActive = true
     @State private var showingEditScreen = false
+    @State private var isTimerElapsed = false
     
     @Environment(\.accessibilityDifferentiateWithoutColor) var differentiateWithoutColor
     @Environment(\.accessibilityVoiceOverEnabled) var voiceOverEnabled
@@ -123,6 +126,10 @@ struct ContentView: View {
             if timeRemaining > 0 {
                 timeRemaining -= 1
             }
+            
+            if timeRemaining == 0 {
+                isTimerElapsed = true
+            }
         }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.willResignActiveNotification)) { _ in
             isActive = false
@@ -134,6 +141,11 @@ struct ContentView: View {
         }
         .sheet(isPresented: $showingEditScreen, onDismiss: resetCards) {
             EditCards()
+        }
+        .alert("Time is Over", isPresented: $isTimerElapsed) {
+            Button("Restart") {
+                resetCards()
+            }
         }
         .onAppear(perform: resetCards)
     }
@@ -149,7 +161,8 @@ struct ContentView: View {
     }
     
     func resetCards() {
-        timeRemaining = 100
+        timeRemaining = ContentView.timerValue
+        isTimerElapsed = false
         isActive = true
         loadData()
     }
